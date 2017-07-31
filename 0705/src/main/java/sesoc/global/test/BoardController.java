@@ -190,6 +190,7 @@ public class BoardController {
 	
 	@RequestMapping("download")
 	public String download(int boardnum, HttpServletResponse response){
+		System.out.println("download() enter...");
 		Board board = repo.selectOne(boardnum);
 		String originalFilename = board.getOriginalfile();
 		String savedFilename = board.getSavedfile();
@@ -213,6 +214,7 @@ public class BoardController {
 		}catch (Exception e) {
 			// TODO: handle exception
 		}
+		System.out.println("download() returning...");
 		return null;
 	}
 	

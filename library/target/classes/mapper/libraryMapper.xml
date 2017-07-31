@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sesoc.global.library.dao.LibraryDAO">
+	<insert id="signUp" parameterType="User">
+		INSERT INTO users VALUES(
+			#{num}, #{userid}, #{password}, #{birthdate}, #{username}, #{tel1}, #{tel2}, #{tel3}, #{image}, #{thumbnail}
+		)
+	</insert>
+	
+	<select id="checkid" resultType="User">
+		SELECT * FROM users WHERE userid=#{userid}
+	</select>
+	
+	<select id="signin" resultType="User" parameterType="User">
+		SELECT * FROM users WHERE userid=#{userid} AND password=#{password}
+	</select>
+	
+	<update id="updateUser" parameterType="User">
+		UPDATE users 
+		SET password=#{password}, tel1=#{tel1}, tel2=#{tel2}, tel3=#{tel3}, image=#{image}, thumbnail=#{thumbnail}
+		WHERE num=#{num} 
+	</update>
+	
+	<select id="findAll" resultType="map">
+		SELECT bbb.num, 
+		imageurl, 
+		title, 
+		publisher, 
+		author, 
+		CASE status WHEN 'RESERVED' THEN 'N' WHEN 'LENT' THEN 'N' WHEN 'DELAYED' THEN 'N' ELSE 'Y' END status
+		FROM
+		(SELECT b.*, grouped.maxnum FROM books b
+		LEFT OUTER JOIN
+			(SELECT b.num, max(l.num) maxnum FROM books b left outer join lend l on b.num = l.booknum group by b.num) grouped
+		ON b.num = grouped.num) bbb
+		LEFT OUTER JOIN
+		lend l
+		on bbb.num = l.booknum
+		AND bbb.maxnum = l.num
+		WHERE 
+			<if test="searchtype == 'title'">		title		</if>
+			<if test="searchtype == 'publisher'">	publisher	</if>
+			<if test="searchtype == 'author'">		author		</if>
+			<if test="searchtype == 'status'">		status		</if>
+		LIKE '%'||#{searchword}||'%'
+		ORDER BY bbb.num
+	</select>
+	
+	<select id="getBookCount" resultType="int">
+		SELECT COUNT(*) 
+		FROM
+		(SELECT b.*, grouped.maxnum FROM books b
+		LEFT OUTER JOIN
+			(SELECT b.num, max(l.num) maxnum FROM books b left outer join lend l on b.num = l.booknum group by b.num) grouped
+		ON b.num = grouped.num) bbb
+		LEFT OUTER JOIN
+		lend l
+		on bbb.num = l.booknum
+		AND bbb.maxnum = l.num
+		WHERE 
+			<if test="searchtype == 'title'"> title LIKE '%'||#{searchword}||'%'</if>
+			<if test="searchtype == 'publisher'">publisher LIKE '%'||#{searchword}||'%'</if>
+			<if test="searchtype == 'author'"> author LIKE '%'||#{searchword}||'%'</if>
+			<if test="searchtype == 'status'">		
+				status
+				<if test="searchword == 'N' || searchword == 'n'">
+					IN('RESERVED','LENT','DELAYED')
+				</if>	
+				<if test="searchword == 'Y' || searchword == 'y'">
+					IN('RETURNED', 'DELAY_RETURNED', 'REJECTED', NULL)
+				</if>	
+			</if>
+	</select>
+	
+	<select id="getbooklist" resultType="map">
+			<!-- SELECT 
+				b.num, 
+				imageurl, 
+				title, 
+				publisher, 
+				author, 
+				CASE status WHEN 'RESERVED' THEN 'N' WHEN 'LENT' THEN 'N' WHEN 'DELAYED' THEN 'N' ELSE 'Y' END status
+			FROM books b
+			LEFT OUTER JOIN lend l 
+			ON b.num = l.booknum
+			WHERE 
+			ORDER BY b.num -->
+			
+			SELECT bbb.num, 
+				imageurl, 
+				title, 
+				publisher, 
+				author, 
+				CASE status WHEN 'RESERVED' THEN 'N' WHEN 'LENT' THEN 'N' WHEN 'DELAYED' THEN 'N' ELSE 'Y' END status
+			FROM
+			(SELECT b.*, grouped.maxnum FROM books b
+			LEFT OUTER JOIN
+				(SELECT b.num, max(l.num) maxnum FROM books b left outer join lend l on b.num = l.booknum group by b.num) grouped
+			ON b.num = grouped.num) bbb
+			left outer join
+			lend l
+			on bbb.num = l.booknum
+			AND bbb.maxnum = l.num
+			ORDER BY bbb.num
+			
+	</select>
+	
+	<select id="selectOneBook" resultType="map">
+		SELECT * FROM(
+			SELECT b.num, imageurl, title, publisher, author, content, l.status 
+			FROM books b
+			LEFT OUTER JOIN lend l 
+			ON b.num = l.booknum
+			WHERE b.num = #{num}
+			ORDER BY l.num desc
+		) WHERE rownum=1
+	</select>
+	
+	<select id="checkReserved" resultType="Lend">
+		SELECT * FROM lend 
+		WHERE booknum=#{booknum} 
+		AND status IN('RESERVED','LENT')
+	</select>
+	
+	<insert id="reserve">
+		INSERT INTO lend VALUES(lend_seq.nextval, #{usernum}, #{booknum}, null, null, null, 'RESERVED')
+	</insert>
+	
+	<select id="requestlist" resultType="map">
+		SELECT title, username, l.num 
+		FROM users u, lend l, books b 
+		WHERE u.num = l.usernum 
+		AND b.num = l.booknum 
+		AND l.status = 'RESERVED'
+	</select>
+	
+	<select id="lentlist" resultType="map">
+		SELECT l.num lendnum, b.title, u.username, to_char(l.startdate, 'yyyy.mm.dd') startdate, to_char(l.enddate, 'yyyy.mm.dd') enddate
+		FROM lend l, users u, books b
+		WHERE l.booknum = b.num
+		AND l.usernum = u.num
+		AND l.status = 'LENT'
+	</select>
+	
+	<select id="delaylist" resultType="map">
+		SELECT l.num lendnum, b.title, u.username, to_char(l.startdate, 'yyyy.mm.dd') startdate, to_char(l.enddate, 'yyyy.mm.dd') enddate, trunc(sysdate,'dd')-trunc(enddate,'dd') delayeddays
+		FROM lend l, users u, books b
+		WHERE l.booknum = b.num
+		AND l.usernum = u.num
+		AND l.status = 'DELAYED' 
+	</select>
+	
+	<select id="lendhistory" resultType="map">
+		SELECT to_char(startdate, 'yyyy.mm.dd') startdate, to_char(enddate, 'yyyy.mm.dd') enddate, to_char(returndate, 'yyyy.mm.dd') returndate, imageurl, title, status
+		FROM lend l, books b
+		WHERE l.usernum = #{usernum}
+		AND l.booknum = b.num
+		ORDER BY l.num asc
+	</select>
+	
+	<update id="grant" parameterType="map" >
+		UPDATE lend SET status='LENT', startdate=sysdate, enddate=sysdate+#{days} WHERE num=#{lendnum}
+	</update>
+	
+	<update id="reject">
+		UPDATE lend SET status='REJECTED' WHERE num=#{lendnum}
+	</update>
+	
+	<update id="returnprocess">
+		UPDATE lend SET status='RETURNED', returndate=sysdate WHERE num=#{lendnum}
+	</update>
+	
+	<update id="delayedReturn">
+		UPDATE lend SET status='DELAY_RETURNED' returndate=sysdate WHERE num=#{lendnum}
+	</update>
+	
+	<update id="checkdelay">
+		UPDATE lend SET status='DELAYED' WHERE trunc(sysdate,'dd')>=trunc(enddate,'dd')
+	</update>
+</mapper>

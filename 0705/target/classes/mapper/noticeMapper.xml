@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sesoc.global.test.dao.NoticeDAO">
+	<!-- 전체목록 -->
+	<select id="selectAll" resultType="Notice" parameterType="map">
+		SELECT 
+			noticenum, custid, title, content, to_char(inputdate, 'yyyy-mm-dd') inputdate, hits, originalfile, savedfile
+		FROM notice
+		WHERE 
+			<!-- <if test="searchtype == 'title'">		title	</if>
+			<if test="searchtype == 'content'">		content	</if>
+			<if test="searchtype == 'custid'">		custid	</if> -->
+			<choose>
+				<when test="searchtype == 'title'">		title		</when>
+				<when test="searchtype == 'content'">	content		</when>
+			</choose>
+			LIKE '%'||#{searchword}||'%'	
+		ORDER BY noticenum desc
+	</select>
+	
+	<!-- 글 자세히 보기 -->
+	<select id="selectOne" resultType="Notice"> <!-- parameterType 명시 안해도 되네? -->
+		SELECT * FROM notice WHERE noticenum = #{noticenum}
+	</select>
+	
+	<!-- 글 등록 -->
+<!-- 	<insert id="insert" parameterType="Board">
+		INSERT INTO board (boardnum, custid, title, content, inputdate, hits 
+		<if test="originalfile != null">,originalfile, savedfile</if>) 
+		VALUES(board_seq.nextval, #{custid}, #{title}, #{content}, sysdate, 0
+		<if test="originalfile != null">, #{originalfile}, #{savedfile}</if>)
+	</insert> -->
+	
+	<insert id="insert" parameterType="Notice">
+	INSERT INTO notice (noticenum, custid, title, content, inputdate, hits, originalfile, savedfile) 
+	VALUES(notice_seq.nextval, 'admin', #{title}, #{content}, sysdate, 0
+	<if test="originalfile == null">, null, null</if>
+	<if test="originalfile != null">, #{originalfile}, #{savedfile}</if>
+	)
+	</insert>
+	
+	<!-- 글 수정 -->
+	<update id="update" parameterType="Notice">
+		UPDATE notice SET title=#{title}, content=#{content}
+		<if test="originalfile != null">, originalfile=#{originalfile}, savedfile=#{savedfile}</if> WHERE noticenum=#{noticenum}
+	</update>
+	
+	<!-- 조회수 올리기 -->
+	<update id="increaseHits">
+		UPDATE notice SET hits=hits+1 WHERE noticenum=#{noticenum}
+	</update>
+	
+	<!-- 글 삭제 -->
+	<delete id="delete">
+		DELETE FROM notice WHERE noticenum=#{noticenum}
+	</delete>
+	
+	<select id="getNoticeCount" resultType="int" parameterType="map">
+		SELECT COUNT(*) FROM notice
+		WHERE 
+			<if test="searchtype == 'title'">		title	</if>
+			<if test="searchtype == 'content'">		content	</if>
+			LIKE '%'||#{searchword}||'%'
+	</select>
+	
+	<update id="deleteFile">
+		UPDATE board SET originalfile = null, savedfile = null WHERE noticenum = #{noticeenum}
+	</update>
+</mapper>

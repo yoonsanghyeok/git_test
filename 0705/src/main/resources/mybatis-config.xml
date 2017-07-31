@@ -18,11 +18,13 @@
   <typeAliases>
 	<typeAlias type="sesoc.global.test.vo.Customer" alias="Customer"/>
 	<typeAlias type="sesoc.global.test.vo.Board" alias="Board"/>
+	<typeAlias type="sesoc.global.test.vo.Notice" alias="Notice"/>
   </typeAliases>
   
   <mappers>
-    <mapper resource="customerMapper.xml"/>
-    <mapper resource="boardMapper.xml"/>
+    <mapper resource="mapper/customerMapper.xml"/>
+    <mapper resource="mapper/boardMapper.xml"/>
+    <mapper resource="mapper/noticeMapper.xml"/>
   </mappers>
 
 </configuration>

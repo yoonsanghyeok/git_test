@@ -89,9 +89,9 @@
 	</c:forEach>
 
 </table>
-	<c:if test="${not empty loginId}">
+	<%-- <c:if test="${not empty loginId}"> --%>
 		<div class="write"><a href="boardWrite">글쓰기</a></div>
-	</c:if>
+	<%-- </c:if> --%>
 
 
 <!-- 페이징 -->

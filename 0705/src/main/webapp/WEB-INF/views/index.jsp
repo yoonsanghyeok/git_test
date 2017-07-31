@@ -44,9 +44,9 @@ function deleteCustomer() {
 			<li><a id="delete" href="#">탈퇴</a></li>
 		</c:if>
 		<li><a href="${pageContext.request.contextPath}/boardList" >게시판</a></li>
-		
+		<li><a href="${pageContext.request.contextPath}/noticeList">공지사항</a></li>
 	</ul>
-	<img src="resources/ryan.png">
+	<img src="images/ryan.png">
 </div>
 </body>
 </html>

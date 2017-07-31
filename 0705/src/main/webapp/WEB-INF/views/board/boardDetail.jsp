@@ -33,6 +33,7 @@
 		}
 	}
 	
+	document.addEventListener('contextmenu', event => event.preventDefault());
 </script>
 <style>
 	div#wrapper{
@@ -100,6 +101,7 @@
 				<input type="button" value="삭제하기" onclick="deleteBoard(${selectedBoard.boardnum}, ${currentPage}, ${searchtype}, ${searchword});"/>
 			</c:if>
 			<a href="boardList?currentPage=${currentPage}&searchtype=${searchtype}&searchword=${searchword}" >목록으로</a>
+			<a href="javascript:history.go(-1)" >history.go(-1)사용</a>
 		</td>
 	</tr>
 	</table>

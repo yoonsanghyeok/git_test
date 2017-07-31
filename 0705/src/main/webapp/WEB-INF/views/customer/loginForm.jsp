@@ -35,7 +35,7 @@
 			<td colspan="2">
 				<input type="submit" id="send_btn" value="로그인" />
 				<input type="reset" value="지우기" />
-				<a href="${pageContext.request.contextPath}/customer?action=/" >돌아가기</a>	
+				<a href="javascript:history.go(-1)" >돌아가기</a>	
 			</td>	
 		</tr>				
 		</table>
